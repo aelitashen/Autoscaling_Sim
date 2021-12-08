@@ -79,35 +79,42 @@ class AutoScaleSystem():
     def step(self, request_list, time_budget):
         """Steps the simulation for a given time budget
         """
+
         # First, distribute new requests to nodes
         self.distribute_requests_to_nodes(request_list)
 
         # Next, ask the nodes to process all the requests as much as possible
         # under the time budget
         completed_requests = self.process_requests(time_budget)
-        print(f"At timestamp {self.timestamp}: processed {len(completed_requests)} requests")
+        print(
+            f"At timestamp {self.timestamp}: \n"
+            f"number of new requests: {len(request_list)}\n"
+            f"processed {len(completed_requests)} requests\n"
+            f"number of nodes: {self.num_nodes}\n"
+        )
+
+        # Export metrics
+        metrics = {
+            "completed_requests": completed_requests,
+            "num_nodes": self.num_nodes,
+            "usages": [node.usage for node in self.nodes],
+            "outstanding_requests": [node.queue_length for node in self.nodes]
+        }
 
         # Evaluates the score here using a set of metrics
-        metrics = {
-            "completed_requests": completed_requests
-        }
         score = self.policy.evaluate_score(metrics)
         self.score += score
 
         # Autoscale here using a set of metrics
-        metrics = {
-            "num_nodes": self.num_nodes
-        }
         new_node_num = self.policy.autoscale(metrics)
 
         # Scale the system using the result of the autoscale policy
         # and increment the system time
         if new_node_num != self.num_nodes:
             self.scale(new_node_num)
-            scale_overhead = self.policy.get_overhead(self.num_nodes, new_node_num)
-            self.timestamp += scale_overhead + time_budget
-        else:
-            self.timestamp += time_budget
+            # scale_overhead = self.policy.get_overhead(self.num_nodes, new_node_num)
+            
+        self.timestamp += time_budget
         
         
 

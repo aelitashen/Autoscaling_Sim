@@ -1,16 +1,18 @@
 from system import AutoScaleSystem
 from policy import BasePolicy
+from threshold_based_policy import ThresholdBasedPolicy
 from request_generator import BaseRequestGenerator
+from variable_request_generator import VariableRequestGenerator
 
 def sim():
     """Main simulation routine
     """
     # Create policy object for autoscale, evaluation, etc
-    policy = BasePolicy()
+    policy = ThresholdBasedPolicy()
 
     # Create request generator object for customizing different request amounts
     # that may or may not change with time
-    request_generator = BaseRequestGenerator(0.1, 1)
+    request_generator = VariableRequestGenerator(3, 1)
 
     # Our main system containing multiple nodes for processing requests
     system = AutoScaleSystem(policy, 4)

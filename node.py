@@ -2,6 +2,11 @@ class Node():
     def __init__(self):
         # The request pool stores all requests that have not yet been processed
         self.request_pool = []
+        self.usage = 0
+
+    @property
+    def queue_length(self):
+        return len(self.request_pool)
 
     def process(self, timestamp, time_budget):
         """Processes pending requests in the pool using a given time budget
@@ -26,6 +31,9 @@ class Node():
             # exit the loop
             if remaining_time == 0:
                 break
+
+        # Calculate percentage of time budget used
+        self.usage = float(time_budget - remaining_time) / time_budget
 
         # Remove requests that have been processed
         self.request_pool = self.request_pool[len(completion_pool):]
