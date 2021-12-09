@@ -22,19 +22,19 @@ class PredictionBasedPolicy(BasePolicy):
         new_num_nodes = metrics_dict["num_nodes"]
         avg_queue_length = np.mean(metrics_dict['outstanding_requests'])
         self.queue_length_history.append(avg_queue_length)
-        self.queue_length_history = self.queue_length_history[-5:]
+        self.queue_length_history = self.queue_length_history[-20:]
         print(self.queue_length_history)
 
         trend = [self.queue_length_history[i + 1] - self.queue_length_history[i] for i in range(len(self.queue_length_history) - 1)]
         is_upward_trend = np.all(np.array(trend) >= 0)
         if self.cooldown == 0:
             if is_upward_trend:
-                self.cooldown = 5
+                self.cooldown = 15
                 new_num_nodes *= 2
 
             is_downward_trend = np.all(np.array(trend) <= 0)
             if is_downward_trend:
-                self.cooldown = 5
+                self.cooldown = 15
                 new_num_nodes /= 2
             
             if new_num_nodes < 1:
@@ -49,11 +49,11 @@ class PredictionBasedPolicy(BasePolicy):
         """
         overhead = 0
 
-        # if old_num_nodes > new_num_nodes:
-        #     overhead = 0.2
+        if old_num_nodes > new_num_nodes:
+            overhead = 2
 
-        # if old_num_nodes < new_num_nodes:
-        #     overhead = 0.2
+        if old_num_nodes < new_num_nodes:
+            overhead = 2
 
         return overhead   
 
@@ -61,9 +61,22 @@ class PredictionBasedPolicy(BasePolicy):
         return np.mean(np.array(self.completed_throughputs) / np.array(self.num_nodes))
 
     def plot(self):
+        print("PREDICTION_BASED")
         plt.figure()
+        num_nodes = self.num_nodes
+        num_nodes = [sum(self.num_nodes[i:i+10])// 10 for i in range(0,len(self.num_nodes),10)]
         plt.plot(self.num_nodes, label="#Nodes", color='r')
-        plt.plot(self.num_new_requests, label="#New Requests", color='b')
+        for n in num_nodes:
+            print(n)
         plt.xlabel('Timestep')
         plt.legend()
-        plt.show()
+        # plt.figure()
+        # x_labels = range(0,1000,10)
+        # completed_throughputs = self.completed_throughputs 
+        # completed_throughputs = [sum(self.completed_throughputs[i:i+10])// 10 for i in range(0,len(self.completed_throughputs),10)]
+        # for cthru in completed_throughputs:
+        #     print(cthru)
+        # plt.plot(x_labels, completed_throughputs[:-1], label="Throughputs", color='b')
+        # plt.xlabel('Timestep')
+        # plt.legend()
+        # plt.show()

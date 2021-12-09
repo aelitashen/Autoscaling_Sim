@@ -1,3 +1,5 @@
+from packet import Packet
+
 class Node():
     def __init__(self):
         # The request pool stores all requests that have not yet been processed
@@ -50,6 +52,12 @@ class Node():
 
         # Add new requests to the request pool
         self.request_pool.extend(request_list)
+
+    def receive_migration_request(self, overhead, timestamp):
+        migration_request = Packet(payload=overhead)
+        migration_request.mark_arrival(timestamp)
+        self.request_pool.insert(0, migration_request)
+
 
     def destruct(self):
         """Destruct the node in case of autoscaling

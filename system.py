@@ -1,5 +1,6 @@
 from node import Node
 from math import ceil
+import random
 
 class AutoScaleSystem():
     def __init__(self, policy, num_nodes=4):
@@ -111,7 +112,12 @@ class AutoScaleSystem():
         if new_node_num != self.num_nodes:
             self.scale(new_node_num)
             scale_overhead = self.policy.get_overhead(self.num_nodes, new_node_num)
-            
+
+            random.seed(10)
+            for node in self.nodes:
+                if random.uniform(0,1) > 0.6:
+                    node.receive_migration_request(overhead=scale_overhead, timestamp=self.timestamp)
+
         self.timestamp += time_budget
         
         

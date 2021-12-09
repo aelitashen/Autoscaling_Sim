@@ -11,10 +11,10 @@ def sim():
     """Main simulation routine
     """
     # Create policy object for autoscale, evaluation, etc
-    policy = BaselinePolicy()
+    # policy = BaselinePolicy()
     # policy = ThresholdBasedPolicy()
     # policy = QueueingBasedPolicy()
-    # policy = PredictionBasedPolicy()
+    policy = PredictionBasedPolicy()
 
     # Create request generator object for customizing different request amounts
     # that may or may not change with time
