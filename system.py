@@ -8,8 +8,6 @@ class AutoScaleSystem():
         # Create the initial nodes and store our policy
         self.nodes = [Node() for _ in range(num_nodes)]
         self.policy = policy
-        # Set the current total score to zero
-        self.score = 0
         # Set the current system time to zero
         self.timestamp = 0
 
@@ -98,12 +96,12 @@ class AutoScaleSystem():
             "completed_requests": completed_requests,
             "num_nodes": self.num_nodes,
             "usages": [node.usage for node in self.nodes],
-            "outstanding_requests": [node.queue_length for node in self.nodes]
+            "outstanding_requests": [node.queue_length for node in self.nodes],
+            "num_new_incoming_requests": len(request_list)
         }
 
         # Evaluates the score here using a set of metrics
-        score = self.policy.evaluate_score(metrics)
-        self.score += score
+        self.policy.update_metric(metrics)
 
         # Autoscale here using a set of metrics
         new_node_num = self.policy.autoscale(metrics)

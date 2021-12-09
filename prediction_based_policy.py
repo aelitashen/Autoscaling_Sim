@@ -2,10 +2,11 @@ from matplotlib import pyplot as plt
 import numpy as np
 from policy import BasePolicy
 
-class ThresholdBasedPolicy(BasePolicy):
+class PredictionBasedPolicy(BasePolicy):
     def __init__(self):
         self.num_nodes = []
         self.completed_throughputs = []
+        self.queue_length_history = []
         self.num_new_requests = []
         self.cooldown = 5
 
@@ -16,38 +17,45 @@ class ThresholdBasedPolicy(BasePolicy):
         self.completed_throughputs.append(len(evaluation_dict["completed_requests"]))
         self.num_new_requests.append(evaluation_dict["num_new_incoming_requests"])
 
+
     def autoscale(self, metrics_dict):
-        """Defines the autoscale policy
-        """
         new_num_nodes = metrics_dict["num_nodes"]
+        avg_queue_length = np.mean(metrics_dict['outstanding_requests'])
+        self.queue_length_history.append(avg_queue_length)
+        self.queue_length_history = self.queue_length_history[-5:]
+        print(self.queue_length_history)
+
+        trend = [self.queue_length_history[i + 1] - self.queue_length_history[i] for i in range(len(self.queue_length_history) - 1)]
+        is_upward_trend = np.all(np.array(trend) >= 0)
         if self.cooldown == 0:
-            if np.mean(metrics_dict["usages"]) > 0.8:
+            if is_upward_trend:
                 self.cooldown = 5
                 new_num_nodes *= 2
 
-            if np.mean(metrics_dict["usages"]) < 0.6:
+            is_downward_trend = np.all(np.array(trend) <= 0)
+            if is_downward_trend:
                 self.cooldown = 5
                 new_num_nodes /= 2
-
+            
             if new_num_nodes < 1:
                 new_num_nodes = 1
         else:
             self.cooldown -= 1
 
-        return int(new_num_nodes)
+        return int(new_num_nodes)  
 
     def get_overhead(self, old_num_nodes, new_num_nodes):
         """Defines the overhead for scaling up/down
         """
         overhead = 0
 
-        if old_num_nodes > new_num_nodes:
-            overhead = 0.2
+        # if old_num_nodes > new_num_nodes:
+        #     overhead = 0.2
 
-        if old_num_nodes < new_num_nodes:
-            overhead = 0.2
+        # if old_num_nodes < new_num_nodes:
+        #     overhead = 0.2
 
-        return overhead
+        return overhead   
 
     def get_total_score(self):
         return np.mean(np.array(self.completed_throughputs) / np.array(self.num_nodes))

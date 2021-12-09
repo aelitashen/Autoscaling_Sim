@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from policy import BasePolicy
 
-class ThresholdBasedPolicy(BasePolicy):
+class QueueingBasedPolicy(BasePolicy):
     def __init__(self):
         self.num_nodes = []
         self.completed_throughputs = []
@@ -16,16 +16,15 @@ class ThresholdBasedPolicy(BasePolicy):
         self.completed_throughputs.append(len(evaluation_dict["completed_requests"]))
         self.num_new_requests.append(evaluation_dict["num_new_incoming_requests"])
 
-    def autoscale(self, metrics_dict):
+    def autoscale(self, metric_dict):
         """Defines the autoscale policy
         """
-        new_num_nodes = metrics_dict["num_nodes"]
+        new_num_nodes = metric_dict['num_nodes']
         if self.cooldown == 0:
-            if np.mean(metrics_dict["usages"]) > 0.8:
+            if np.mean(metric_dict['outstanding_requests']) >= 10:
                 self.cooldown = 5
                 new_num_nodes *= 2
-
-            if np.mean(metrics_dict["usages"]) < 0.6:
+            elif np.mean(metric_dict['outstanding_requests']) <= 1:
                 self.cooldown = 5
                 new_num_nodes /= 2
 
@@ -33,7 +32,7 @@ class ThresholdBasedPolicy(BasePolicy):
                 new_num_nodes = 1
         else:
             self.cooldown -= 1
-
+            
         return int(new_num_nodes)
 
     def get_overhead(self, old_num_nodes, new_num_nodes):
@@ -47,7 +46,7 @@ class ThresholdBasedPolicy(BasePolicy):
         if old_num_nodes < new_num_nodes:
             overhead = 0.2
 
-        return overhead
+        return overhead   
 
     def get_total_score(self):
         return np.mean(np.array(self.completed_throughputs) / np.array(self.num_nodes))
