@@ -110,7 +110,7 @@ class AutoScaleSystem():
         # and increment the system time
         if new_node_num != self.num_nodes:
             self.scale(new_node_num)
-            # scale_overhead = self.policy.get_overhead(self.num_nodes, new_node_num)
+            scale_overhead = self.policy.get_overhead(self.num_nodes, new_node_num)
             
         self.timestamp += time_budget
         
